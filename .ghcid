@@ -1,0 +1,1 @@
+--command="nix-shell -A shells.ghc --run \"cabal new-repl four\""

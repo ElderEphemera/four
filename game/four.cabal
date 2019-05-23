@@ -20,6 +20,7 @@ executable four
   -- other-extensions:
   build-depends:       base
                      , reflex-dom
+                     , jsaddle
                      , text
                      , distributive
                      , adjunctions

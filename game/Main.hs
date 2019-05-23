@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE LambdaCase #-}
@@ -20,11 +21,20 @@ import Data.FileEmbed
 import Data.Traversable
 import qualified Data.Text as T
 
+import Language.Javascript.JSaddle.Types
+
 import Reflex.Dom.Core
 
 
 main :: IO ()
-main = mainWidgetWithCss css app
+#ifdef ghcjs_HOST_OS
+main = mainJSM
+#else
+main = putStrLn "Please use ghcjs" -- Allows ghcid to work
+#endif
+
+mainJSM :: JSM ()
+mainJSM = mainWidgetWithCss css app
   where css = $(embedFile "style.css")
 
 app :: (DomBuilder t m, PostBuild t m, MonadFix m, MonadHold t m) => m ()
