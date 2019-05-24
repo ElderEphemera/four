@@ -14,7 +14,6 @@ module Main where
 
 import Control.Monad.Fix
 
-import Data.Bool
 import Data.Distributive
 import Data.Functor.Rep
 import Data.FileEmbed
@@ -38,11 +37,12 @@ mainJSM = mainWidgetWithCss css app
   where css = $(embedFile "style.css")
 
 app :: (DomBuilder t m, PostBuild t m, MonadFix m, MonadHold t m) => m ()
-app = do
+app = divClass "main" $ do
   rec
     game <- foldDyn doAction initialGame click
     click <- gameArea game
   pure ()
+
 
 gameArea
   :: (DomBuilder t m, PostBuild t m)
@@ -52,11 +52,26 @@ gameArea game = do
   fmap leftmost $ elClass "table" "game-area" $ forM allFour $ \row ->
     fmap leftmost $ el "tr" $ forM allFour $ \col -> do
       let coord = Coord{..}
-          txt = dynText $ weightText . (`index` coord) . gameGrid <$> game
-          attrs = ("class" =:) . selClass . (Just coord ==) . gameSel <$> game
+          txt = dynText $ weightText coord <$> game
+          attrs = ffor game $ \g -> "class" =: T.unwords
+            ["tile" , selClass coord g , weightClass coord g]
       (btn,_) <- el "td" $ elDynAttr' "button" attrs txt
       pure $ coord <$ domEvent Click btn
-  where selClass = bool "unselected" "selected"
+
+weightText :: Coord -> Game -> T.Text
+weightText coord = toText . (`index` coord) . gameGrid
+  where
+    toText 0 = ""
+    toText n = T.pack . show @Int $ 2^n
+
+weightClass :: Coord -> Game -> T.Text
+weightClass coord = ("weight-" <>) . T.pack . show . (`index` coord) . gameGrid
+
+selClass :: Coord -> Game -> T.Text
+selClass coord = toText . (Just coord ==) . gameSel
+  where
+    toText False = "unselected"
+    toText True  = "selected"
 
 
 data Four = FourA | FourB | FourC | FourD
@@ -114,11 +129,6 @@ instance Representable Grid where
 
 
 type Weight = Int
-
-weightText :: Weight -> T.Text
-weightText 0 = ""
-weightText n = T.pack . show @Int $ 2^n
-
 
 data Game = Game
   { gameGrid :: Grid Weight

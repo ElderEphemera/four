@@ -1,8 +1,37 @@
-.game-area button {
-    width: 50px;
-    height: 50px;
+div.main {
+    margin: auto;
+    width: 418px;
 }
 
-.game-area button.selected {
+button.tile {
+    width: 100px;
+    height: 100px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    background-color: #b99cd3;
+}
+
+button.tile:focus {
+    outline: none;
+}
+
+button.tile::-moz-focus-inner {
+    border: none;
+}
+
+button.tile.selected {
     border: 2px solid black;
+}
+
+button.tile.weight-0 {
+    background-color: #EEE;
+}
+
+button.tile.weight-1 {
+    background-color: #25c681;
+}
+
+button.tile.weight-2 {
+    background-color: #27b0b2;
 }
