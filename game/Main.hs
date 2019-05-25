@@ -19,6 +19,7 @@ import Data.Functor.Rep
 import Data.FileEmbed
 import Data.Traversable
 import qualified Data.Text as T
+import Data.Text.Encoding
 
 import Language.Javascript.JSaddle.Types
 
@@ -33,16 +34,35 @@ main = putStrLn "Please use ghcjs" -- Allows ghcid to work
 #endif
 
 mainJSM :: JSM ()
-mainJSM = mainWidgetWithCss css app
-  where css = $(embedFile "style.css")
+mainJSM = mainWidgetWithHead appHead appBody
 
-app :: (DomBuilder t m, PostBuild t m, MonadFix m, MonadHold t m) => m ()
-app = divClass "main" $ do
+appHead :: DomBuilder t m => m ()
+appHead = do
+  el "title" $ text "Four"
+  let css = $(embedFile "style.css")
+  elAttr "style" ("type" =: "text/css") $ text $ decodeUtf8 css
+  elAttr "link"
+    (  "rel" =: "stylesheet"
+    <> "href" =: "https://code.cdn.mozilla.net/fonts/fira.css"
+    ) blank
+
+appBody :: (DomBuilder t m, PostBuild t m, MonadFix m, MonadHold t m) => m ()
+appBody = divClass "main" $ do
+  reset <- gameHeader
   rec
-    game <- foldDyn doAction initialGame click
+    game <- foldDyn doAction initialGame $ leftmost
+      [ ClickTile <$> click
+      , ResetGame <$ reset
+      ]
     click <- gameArea game
   pure ()
 
+
+gameHeader :: DomBuilder t m => m (Event t ())
+gameHeader = divClass "game-header" $ do
+  elAttr "span" ("class" =: "title") $ text "Four"
+  (resetBtn,_) <- elAttr' "button" ("class" =: "reset") $ text "Reset"
+  pure $ domEvent Click resetBtn
 
 gameArea
   :: (DomBuilder t m, PostBuild t m)
@@ -142,10 +162,12 @@ initialGame = Game
   }
 
 
-type Action = Coord
+data Action
+  = ClickTile Coord
+  | ResetGame
 
 doAction :: Action -> Game -> Game
-doAction clicked game@Game{..} = case gameSel of
+doAction (ClickTile clicked) game@Game{..} = case gameSel of
   Just sel -> case moveType gameGrid sel clicked of
     MoveCombine -> combine sel clicked game
     MoveShift -> game{gameSel = Nothing, gameGrid = shift sel clicked gameGrid}
@@ -153,6 +175,7 @@ doAction clicked game@Game{..} = case gameSel of
   Nothing
     | 0 == index gameGrid clicked -> game
     | otherwise -> game{gameSel = Just clicked}
+doAction ResetGame _ = initialGame
 
 
 data MoveType = MoveCombine | MoveShift | MoveInvalid
