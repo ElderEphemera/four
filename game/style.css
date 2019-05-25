@@ -5,6 +5,7 @@ button {
 
 button:focus {
     outline: none;
+    border: 1px dashed black;
 }
 
 button::-moz-focus-inner {
