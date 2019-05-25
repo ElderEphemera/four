@@ -52,11 +52,23 @@ appBody = divClass "main" $ do
   rec
     game <- foldDyn doAction initialGame $ leftmost
       [ ClickTile <$> click
+      , Continue <$ continue
       , ResetGame <$ reset
       ]
     click <- gameArea game
+    continue <- gameOverlay game
   pure ()
 
+
+gameOverlay
+  :: (DomBuilder t m, PostBuild t m, MonadHold t m)
+  => Dynamic t Game
+  -> m (Event t ())
+gameOverlay game = do
+  let attrs = ffor game $ \g -> "class" =:
+        if gameWon g == WonOverlay then "overlay" else  "overlay-hidden"
+  (overlay,_) <- elDynAttr' "div" attrs $ text "You Won!"
+  pure $ domEvent Click overlay
 
 gameHeader :: DomBuilder t m => m (Event t ())
 gameHeader = divClass "game-header" $ do
@@ -150,20 +162,26 @@ instance Representable Grid where
 
 type Weight = Int
 
+data WonState = NotWon | WonOverlay | WonContinue
+  deriving (Eq, Show)
+
 data Game = Game
   { gameGrid :: Grid Weight
   , gameSel :: Maybe Coord
+  , gameWon :: WonState
   } deriving (Eq, Show)
 
 initialGame :: Game
 initialGame = Game
   { gameGrid = tabulate $ fromEnum . (topLeft ==)
   , gameSel = Nothing
+  , gameWon = NotWon
   }
 
 
 data Action
   = ClickTile Coord
+  | Continue
   | ResetGame
 
 doAction :: Action -> Game -> Game
@@ -175,6 +193,7 @@ doAction (ClickTile clicked) game@Game{..} = case gameSel of
   Nothing
     | 0 == index gameGrid clicked -> game
     | otherwise -> game{gameSel = Just clicked}
+doAction Continue game = game{gameWon = WonContinue}
 doAction ResetGame _ = initialGame
 
 
@@ -197,6 +216,9 @@ combine from to Game{..} = Game
       then fromEnum (from == topLeft)
       else index gameGrid coord + fromEnum (coord == to)
   , gameSel = Nothing
+  , gameWon = case (gameWon, index gameGrid to) of
+      (NotWon, 1) -> WonOverlay
+      _ -> gameWon
   }
 
 shift :: Coord -> Coord -> Grid Weight -> Grid Weight
