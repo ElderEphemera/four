@@ -62,21 +62,26 @@ button.tile {
     width: 100px;
     height: 100px;
     font-weight: bold;
-    background-color: #b99cd3;
 }
 
 button.tile.selected {
     border: 2px solid black;
 }
 
-button.tile.weight-0 {
-    background-color: #EEE;
-}
-
-button.tile.weight-1 {
-    background-color: #25c681;
-}
-
-button.tile.weight-2 {
-    background-color: #27b0b2;
-}
+button.tile.weight-0  { background-color: #EEE; }
+button.tile.weight-1  { background-color: rgb(37,209,199); }
+button.tile.weight-2  { background-color: rgb(45,209,153); }
+button.tile.weight-3  { background-color: rgb(52,209,113); }
+button.tile.weight-4  { background-color: rgb(59,209,76); }
+button.tile.weight-5  { background-color: rgb(90,210,67); }
+button.tile.weight-6  { background-color: rgb(134,210,74); }
+button.tile.weight-7  { background-color: rgb(173,210,82); }
+button.tile.weight-8  { background-color: rgb(210,210,89); }
+button.tile.weight-9  { background-color: rgb(211,180,96); }
+button.tile.weight-10 { background-color: rgb(211,153,104); }
+button.tile.weight-11 { background-color: rgb(210,130,112); }
+button.tile.weight-12 { background-color: rgb(210,118,127); }
+button.tile.weight-13 { background-color: rgb(211,126,157); }
+button.tile.weight-14 { background-color: rgb(211,134,183); }
+button.tile.weight-15 { background-color: rgb(211,141,206); }
+button.tile.weight-16 { background-color: rgb(198,148,211); }
