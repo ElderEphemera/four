@@ -60,6 +60,7 @@ css = LT.toStrict . renderWith compact [] $ do
     height (px 60)
     marginTop (px 16)
     fontFamily ["Fira Sans"] []
+    fontSize (pt 12)
     fontWeight bold
     backgroundColor "#f4ac6e"
     float floatRight
@@ -67,6 +68,8 @@ css = LT.toStrict . renderWith compact [] $ do
   "button" # ".tile" ? do
     width (px 100)
     height (px 100)
+    fontFamily ["Fira Sans"] []
+    fontSize (pt 20)
     fontWeight bold
 
   "button" # ".tile" # ".selected" ? do
