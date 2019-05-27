@@ -6,7 +6,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -16,14 +15,14 @@ import Control.Monad.Fix
 
 import Data.Distributive
 import Data.Functor.Rep
-import Data.FileEmbed
 import Data.Traversable
 import qualified Data.Text as T
-import Data.Text.Encoding
 
 import Language.Javascript.JSaddle.Types
 
 import Reflex.Dom.Core
+
+import Style
 
 
 main :: IO ()
@@ -39,8 +38,7 @@ mainJSM = mainWidgetWithHead appHead appBody
 appHead :: DomBuilder t m => m ()
 appHead = do
   el "title" $ text "Four"
-  let css = $(embedFile "style.css")
-  elAttr "style" ("type" =: "text/css") $ text $ decodeUtf8 css
+  elAttr "style" ("type" =: "text/css") $ text css
   elAttr "link"
     (  "rel" =: "stylesheet"
     <> "href" =: "https://code.cdn.mozilla.net/fonts/fira.css"
