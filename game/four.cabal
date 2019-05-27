@@ -12,7 +12,6 @@ maintainer:          joshprice247@gmail.com
 copyright:           Copyright (c) 2019, Joshua Price
 category:            Game
 build-type:          Simple
-extra-source-files:  style.css
 
 executable four
   main-is:             Main.hs
