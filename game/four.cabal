@@ -3,8 +3,9 @@ cabal-version:       2.0
 name:                four
 version:             0.1.0.0
 synopsis:            A "puzzle" "game" created for the Not A Game Jam Game Jam
--- description:
--- bug-reports:
+description:         Something approaching a 2048-esque puzzle game, but not
+                     quite achieving the "puzzle" or even the "game" part.
+bug-reports:         https://github.com/ElderEphemera/four/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Joshua Price
