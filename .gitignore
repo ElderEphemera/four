@@ -1,4 +1,6 @@
 dist-newstyle
-result
-result-*
+result-native
+result-web
+result-zip
+result-android
 .ghc.environment.*
