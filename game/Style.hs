@@ -12,7 +12,7 @@ css = LT.toStrict . renderWith compact [] $ do
   general
   overlay
   gameHeader
-  tiles
+  gameArea
 
 general :: Css
 general = do
@@ -22,6 +22,7 @@ general = do
   
   "body" ? do
     backgroundColor "#FFF"
+    margin (pc 0) (pc 0) (pc 0) (pc 0)
 
   "button" ? do
     borderStyle none
@@ -34,7 +35,8 @@ general = do
 
   "div" # ".main" ? do
     margin auto auto auto auto
-    width (px 418)
+    width (px 400)
+    maxWidth (vw 95)
 
 overlay :: Css
 overlay = do
@@ -72,10 +74,24 @@ gameHeader = do
     backgroundColor "#f4ac6e"
     float floatRight
 
+gameArea :: Css
+gameArea = "table" # ".game-area" ? do
+  margin auto auto auto auto
+  width (px 400)
+  maxWidth (vmin 95)
+  height (px 400)
+  maxHeight (vmin 95)
+
+  "td" ? do
+    width (pct 25)
+    height (pct 25)
+
+  tiles
+
 tiles :: Css
 tiles = "button" # ".tile" ? do
-  width (px 100)
-  height (px 100)
+  width (pct 100)
+  height (pct 100)
   fontSize (pt 20)
 
   ".selected" & do
