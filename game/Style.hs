@@ -22,11 +22,11 @@ general = do
   
   "body" ? do
     backgroundColor "#FFF"
-    margin (pc 0) (pc 0) (pc 0) (pc 0)
+    sym margin nil
 
   "button" ? do
     borderStyle none
-    borderRadius (px 10) (px 10) (px 10) (px 10)
+    sym borderRadius (px 10)
     ":focus" & do
       outlineStyle none
       border dashed (px 1) black
@@ -34,7 +34,7 @@ general = do
       borderStyle none
 
   "div" # ".main" ? do
-    margin auto auto auto auto
+    sym margin auto
     width (px 400)
     maxWidth (vw 95)
 
@@ -45,8 +45,8 @@ overlay = do
 
   "div" # ".overlay" ? do
     position absolute
-    top (pct 0)
-    left (pct 0)
+    top nil
+    left nil
     width (pct 100)
     height (pct 100)
     textAlign center
@@ -61,7 +61,7 @@ gameHeader :: Css
 gameHeader = do
   "div" # ".game-header" ? do
     height (px 94)
-    margin (px 0) (px 25) (px 0) (px 25)
+    sym2 margin nil (px 25)
 
   "span" # ".title" ? do
     fontSize (pt 50)
@@ -76,7 +76,7 @@ gameHeader = do
 
 gameArea :: Css
 gameArea = "table" # ".game-area" ? do
-  margin auto auto auto auto
+  sym margin auto
   width (px 400)
   maxWidth (vmin 95)
   height (px 400)
