@@ -18,22 +18,13 @@ import Data.Functor.Rep
 import Data.Traversable
 import qualified Data.Text as T
 
-import Language.Javascript.JSaddle.Types
-
-import Reflex.Dom.Core
+import Reflex.Dom
 
 import Style
 
 
 main :: IO ()
-#ifdef ghcjs_HOST_OS
-main = mainJSM
-#else
-main = putStrLn "Please use ghcjs" -- Allows ghcid to work
-#endif
-
-mainJSM :: JSM ()
-mainJSM = mainWidgetWithHead appHead appBody
+main = mainWidgetWithHead appHead appBody
 
 appHead :: DomBuilder t m => m ()
 appHead = do
