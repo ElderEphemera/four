@@ -29,7 +29,6 @@ general = do
     sym borderRadius (px 10)
     ":focus" & do
       outlineStyle none
-      border dashed (px 1) black
     "::-moz-focus-inner" & do
       borderStyle none
 
