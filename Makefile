@@ -1,8 +1,8 @@
 native:
-	nix-build -o result-native -A ghc.four
+	nix-build -o result-native -A build.native
 
 web:
-	nix-build -o result-web -A ghcjs.four
+	nix-build -o result-web -A build.web
 
 zip: web
 	mkdir -p result-zip
@@ -14,6 +14,6 @@ zip: web
 	    result-web/bin/four.jsexe/runmain.js
 
 android:
-	nix-build -o result-android -A android.four
+	nix-build -o result-android -A build.android
 
 .PHONY: native web zip android
