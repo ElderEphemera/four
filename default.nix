@@ -18,6 +18,11 @@ let
       displayName = "Four";
       resources = ./res;
     };
+
+    overrides = self: super: {
+      # Clay is broken because of testsuite dependencies.
+      clay = with pkgs.haskell.lib; markUnbroken (dontCheck super.clay);
+    };
   });
 
   native = project.ghc.four;
