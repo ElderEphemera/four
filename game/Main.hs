@@ -10,15 +10,15 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Main where
+module Main (main) where
 
-import Control.Monad.Fix
-import Control.Monad.Trans.Maybe
+import Control.Monad.Fix (MonadFix)
+import Control.Monad.Trans.Maybe (MaybeT(..))
 
-import Data.Distributive
-import Data.Functor.Rep
-import Data.Maybe
-import Data.Traversable
+import Data.Distributive (Distributive(..))
+import Data.Functor.Rep (Representable(..), distributeRep, collectRep)
+import Data.Maybe (fromMaybe)
+import Data.Traversable (forM)
 import qualified Data.Text as T
 
 import Text.Read (readMaybe)
@@ -30,7 +30,7 @@ import JSDOM.Types (MonadDOM)
 import JSDOM.Generated.Storage (Storage, getItem, setItem)
 import JSDOM.Generated.Window (getLocalStorage)
 
-import Style
+import Style (css)
 
 
 main :: IO ()
