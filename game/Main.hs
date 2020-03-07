@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -12,19 +13,30 @@
 module Main where
 
 import Control.Monad.Fix
+import Control.Monad.Trans.Maybe
 
 import Data.Distributive
 import Data.Functor.Rep
+import Data.Maybe
 import Data.Traversable
 import qualified Data.Text as T
 
+import Text.Read (readMaybe)
+
 import Reflex.Dom
+
+import JSDOM (currentWindow)
+import JSDOM.Types (MonadDOM)
+import JSDOM.Generated.Storage (Storage, getItem, setItem)
+import JSDOM.Generated.Window (getLocalStorage)
 
 import Style
 
 
 main :: IO ()
-main = mainWidgetWithHead appHead appBody
+main = do
+  initialGame <- loadGame
+  mainWidgetWithHead appHead (appBody initialGame)
 
 appHead :: DomBuilder t m => m ()
 appHead = do
@@ -35,11 +47,21 @@ appHead = do
     <> "href" =: "https://code.cdn.mozilla.net/fonts/fira.css"
     ) blank
 
-appBody :: (DomBuilder t m, PostBuild t m, MonadFix m, MonadHold t m) => m ()
-appBody = divClass "main" $ do
+appBody
+  :: ( DomBuilder t m
+     , PostBuild t m
+     , MonadFix m
+     , MonadHold t m
+#ifdef ghcjs_HOST_OS
+     , MonadDOM (PushM t)
+#endif
+     )
+  => Game
+  -> m ()
+appBody initialGame = divClass "main" $ do
   reset <- gameHeader
   rec
-    game <- foldDyn doAction initialGame $ leftmost
+    game <- foldDynM performAction initialGame $ leftmost
       [ ClickTile <$> click
       , Continue <$ continue
       , ResetGame <$ reset
@@ -95,8 +117,47 @@ selClass coord = toText . (Just coord ==) . gameSel
     toText True  = "selected"
 
 
+#ifdef ghcjs_HOST_OS
+
+performAction :: MonadDOM m => Action -> Game -> m Game
+performAction action oldGame = do
+  let newGame = applyAction action oldGame
+  saveGame newGame
+  pure newGame
+
+saveGame :: MonadDOM m => Game -> m ()
+saveGame game = fmap (fromMaybe ()) . runMaybeT $ do
+  storage <- getStorage
+  setItem storage storageKey (show game)
+  pure ()
+
+loadGame :: MonadDOM m => m Game
+loadGame = fmap (fromMaybe defaultGame) . runMaybeT $ do
+  storage <- getStorage
+  item <- MaybeT (getItem storage storageKey)
+  MaybeT . pure $ readMaybe item
+
+getStorage :: MonadDOM m => MaybeT m Storage
+getStorage = do
+  window <- MaybeT currentWindow
+  MaybeT $ Just <$> getLocalStorage window
+
+storageKey :: T.Text
+storageKey = "four"
+
+#else
+
+performAction :: Monad m => Action -> Game -> m Game
+performAction action game = pure $ applyAction action game
+
+loadGame :: Applicative m => m Game
+loadGame = pure defaultGame
+
+#endif
+
+
 data Four = FourA | FourB | FourC | FourD
-  deriving (Eq, Show, Ord, Enum, Bounded)
+  deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 allFour :: [Four]
 allFour = [FourA .. FourD]
@@ -106,7 +167,7 @@ distFour x y = abs (fromEnum x - fromEnum y)
 
 
 data Line a = Line a a a a
-  deriving (Eq, Show, Functor)
+  deriving (Eq, Show, Read, Functor)
 
 instance Distributive Line where
   distribute = distributeRep
@@ -123,7 +184,7 @@ instance Representable Line where
 
 
 data Coord = Coord { row, col :: Four }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 topLeft :: Coord
 topLeft = Coord FourA FourA
@@ -137,7 +198,7 @@ isNeighborOf x y = 1 == distCoord x y
 
 
 newtype Grid a = Grid { gridTable :: Line (Line a) }
-  deriving (Eq, Show, Functor)
+  deriving (Eq, Show, Read, Functor)
 
 instance Distributive Grid where
   distribute = distributeRep
@@ -152,16 +213,16 @@ instance Representable Grid where
 type Weight = Int
 
 data WonState = NotWon | WonOverlay | WonContinue
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read)
 
 data Game = Game
   { gameGrid :: Grid Weight
   , gameSel :: Maybe Coord
   , gameWon :: WonState
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Read)
 
-initialGame :: Game
-initialGame = Game
+defaultGame :: Game
+defaultGame = Game
   { gameGrid = tabulate $ fromEnum . (topLeft ==)
   , gameSel = Nothing
   , gameWon = NotWon
@@ -173,8 +234,8 @@ data Action
   | Continue
   | ResetGame
 
-doAction :: Action -> Game -> Game
-doAction (ClickTile clicked) game@Game{..} = case gameSel of
+applyAction :: Action -> Game -> Game
+applyAction (ClickTile clicked) game@Game{..} = case gameSel of
   Just sel -> case moveType gameGrid sel clicked of
     MoveCombine -> combine sel clicked game
     MoveShift -> game{gameSel = Nothing, gameGrid = shift sel clicked gameGrid}
@@ -182,8 +243,8 @@ doAction (ClickTile clicked) game@Game{..} = case gameSel of
   Nothing
     | 0 == index gameGrid clicked -> game
     | otherwise -> game{gameSel = Just clicked}
-doAction Continue game = game{gameWon = WonContinue}
-doAction ResetGame _ = initialGame
+applyAction Continue game = game{gameWon = WonContinue}
+applyAction ResetGame _ = defaultGame
 
 
 data MoveType = MoveCombine | MoveShift | MoveInvalid
