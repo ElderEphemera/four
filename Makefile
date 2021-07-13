@@ -10,4 +10,7 @@ zip:
 android:
 	nix-build -o result-android -A build.android
 
-.PHONY: native web zip android
+clean:
+	rm -vf result-native result-web result-zip result-android
+
+.PHONY: native web zip android clean
