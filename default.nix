@@ -26,21 +26,28 @@ let
   });
 
   native = project.ghc.four;
-  web = project.ghcjs.four;
+  rawWeb = project.ghcjs.four;
   android = project.android.four;
 
   webDir = "$src/bin/four.jsexe";
-  webFiles = [ "index.html" "rts.js" "lib.js" "out.js" "runmain.js" ];
-  zipFiles = nixpkgs.lib.strings.concatStringsSep " " webFiles;
+  webFiles = nixpkgs.lib.strings.concatStringsSep " "
+    [ "index.html" "rts.js" "lib.js" "out.js" "runmain.js" ];
+  web = nixpkgs.runCommand "four-zip" {
+    src = rawWeb;
+  } ''
+    mkdir -p $out
+    cd ${webDir}
+    cp ${webFiles} $out
+  '';
+
   zip = nixpkgs.runCommand "four-zip" {
     src = web;
     buildInputs = [ nixpkgs.zip ];
   } ''
     mkdir -p $out
-    cd ${webDir}
-    zip $out/four.zip ${zipFiles}
+    zip $out/four.zip $src/*
   '';
 
-  build = { inherit native web zip android; };
+  build = { inherit native rawWeb web zip android; };
   shells = project.shells;
 in { inherit build shells; }
