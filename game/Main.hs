@@ -17,7 +17,7 @@ import Control.Monad.Trans.Maybe (MaybeT(..))
 
 import Data.Distributive (Distributive(..))
 import Data.Functor.Rep (Representable(..), distributeRep, collectRep)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isJust)
 import Data.Traversable (forM)
 import qualified Data.Text as T
 
@@ -59,12 +59,12 @@ appBody
   => Game
   -> m ()
 appBody initialGame = divClass "main" $ do
-  reset <- gameHeader
+  header <- gameHeader
   rec
     game <- foldDynM performAction initialGame $ leftmost
       [ ClickTile <$> click
       , Continue <$ continue
-      , ResetGame <$ reset
+      , header
       ]
     click <- gameArea game
     continue <- gameOverlay game
@@ -76,16 +76,28 @@ gameOverlay
   => Dynamic t Game
   -> m (Event t ())
 gameOverlay game = do
-  let attrs = ffor game $ \g -> "class" =:
-        if gameWon g == WonOverlay then "overlay" else  "overlay-hidden"
-  (overlay,_) <- elDynAttr' "div" attrs $ text "You Won!"
+  let cls = ffor game $ \g ->
+        "overlay " <> if isJust $ gameInfo g then "visible" else "hidden"
+  (overlay, _) <- elDynClass' "div" cls . dyn . ffor game $ \g ->
+    case gameInfo g of
+      Nothing -> text ""
+      Just Win -> divClass "win" $ text "You Won!"
+      Just Help -> divClass "help" . text $
+        "Click on a tile to select it. Once you've selected a tile you can "
+        <> "click on an adjacent empty space to move the selected tile. Or you "
+        <> "can click on an adjacent tile of equal value to merge the two. The "
+        <> "goal of the \"game\" is to create a \"4\" tile."
   pure $ domEvent Click overlay
 
-gameHeader :: DomBuilder t m => m (Event t ())
+gameHeader :: DomBuilder t m => m (Event t Action)
 gameHeader = divClass "game-header" $ do
   elAttr "span" ("class" =: "title") $ text "Four"
   (resetBtn,_) <- elAttr' "button" ("class" =: "reset") $ text "Reset"
-  pure $ domEvent Click resetBtn
+  (helpBtn,_) <- elAttr' "button" ("class" =: "help") $ text "Help"
+  pure $ leftmost
+    [ ShowHelp <$ domEvent Click helpBtn
+    , ResetGame <$ domEvent Click resetBtn
+    ]
 
 gameArea
   :: (DomBuilder t m, PostBuild t m)
@@ -212,20 +224,22 @@ instance Representable Grid where
 
 type Weight = Int
 
-data WonState = NotWon | WonOverlay | WonContinue
+data Overlay = Help | Win
   deriving (Eq, Show, Read)
 
 data Game = Game
   { gameGrid :: Grid Weight
   , gameSel :: Maybe Coord
-  , gameWon :: WonState
+  , gameWon :: Bool
+  , gameInfo :: Maybe Overlay
   } deriving (Eq, Show, Read)
 
 defaultGame :: Game
 defaultGame = Game
   { gameGrid = tabulate $ fromEnum . (topLeft ==)
   , gameSel = Nothing
-  , gameWon = NotWon
+  , gameWon = False
+  , gameInfo = Nothing
   }
 
 
@@ -233,6 +247,7 @@ data Action
   = ClickTile Coord
   | Continue
   | ResetGame
+  | ShowHelp
 
 applyAction :: Action -> Game -> Game
 applyAction (ClickTile clicked) game@Game{..} = case gameSel of
@@ -243,8 +258,9 @@ applyAction (ClickTile clicked) game@Game{..} = case gameSel of
   Nothing
     | 0 == index gameGrid clicked -> game
     | otherwise -> game{gameSel = Just clicked}
-applyAction Continue game = game{gameWon = WonContinue}
+applyAction Continue game = game{gameInfo = Nothing}
 applyAction ResetGame _ = defaultGame
+applyAction ShowHelp game = game{gameInfo = Just Help}
 
 
 data MoveType = MoveCombine | MoveShift | MoveInvalid
@@ -266,9 +282,10 @@ combine from to Game{..} = Game
       then fromEnum (from == topLeft)
       else index gameGrid coord + fromEnum (coord == to)
   , gameSel = Nothing
-  , gameWon = case (gameWon, index gameGrid to) of
-      (NotWon, 1) -> WonOverlay
-      _ -> gameWon
+  , gameWon = gameWon || index gameGrid to == 1
+  , gameInfo = case (gameWon, index gameGrid to) of
+      (False, 1) -> Just Win
+      _ -> gameInfo
   }
 
 shift :: Coord -> Coord -> Grid Weight -> Grid Weight

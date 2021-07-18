@@ -38,40 +38,52 @@ general = do
     maxWidth (vw 95)
 
 overlay :: Css
-overlay = do
-  "div" # ".overlay-hidden" ? do
+overlay = "div" # ".overlay" ? do
+  ".hidden" & do
     opacity 0
 
-  "div" # ".overlay" ? do
+  ".visible" & do
     position absolute
     top nil
     left nil
     width (pct 100)
     height (pct 100)
     textAlign center
-    paddingTop (px 240)
     backgroundColor "#AAA"
     opacity 0.9
     transitionProperty "opacity"
     transitionDuration (sec 0.5)
-    fontSize (pt 80)
+
+    "div" ? do
+      sym margin auto
+      width (px 450)
+      maxWidth (vw 98)
+
+      ".win" & do
+        paddingTop (px 240)
+        fontSize (pt 80)
+
+      ".help" & do
+        paddingTop (px 110)
+        fontSize (pt 24)
 
 gameHeader :: Css
-gameHeader = do
-  "div" # ".game-header" ? do
-    height (px 94)
-    sym2 margin nil (px 25)
+gameHeader = "div" # ".game-header" ? do
+  height (px 94)
+  sym2 margin nil (px 25)
 
   "span" # ".title" ? do
     fontSize (pt 50)
 
-  "button" # ".reset" ? do
+  "button" ? do
     width (px 60)
     height (px 60)
     marginTop (px 16)
+    marginLeft (px 10)
     fontSize (pt 12)
-    backgroundColor "#f4ac6e"
     float floatRight
+    ".reset" & backgroundColor "#f4ac6e"
+    ".help" & backgroundColor "#f7d79a"
 
 gameArea :: Css
 gameArea = "table" # ".game-area" ? do
