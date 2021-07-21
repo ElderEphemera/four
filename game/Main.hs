@@ -41,6 +41,10 @@ main = do
 appHead :: DomBuilder t m => m ()
 appHead = do
   el "title" $ text "Four"
+  elAttr "meta"
+    (  "name" =: "viewport"
+    <> "content" =: "width=device-width, initial-scale=1"
+    ) blank
   elAttr "style" ("type" =: "text/css") $ text css
   elAttr "link"
     (  "rel" =: "stylesheet"
