@@ -1,5 +1,9 @@
 let
-  platform = import ./reflex-platform { config.android_sdk.accept_license = true; };
+  platform = import (builtins.fetchGit {
+    name = "reflex-platform";
+    url = "https://github.com/reflex-frp/reflex-platform";
+    ref = "5429278830e1555a577f2550e045ce7f7164aa65";
+  }) { config.android_sdk.accept_license = true; };
   inherit (platform) nixpkgs;
 
   project = platform.project ({ pkgs, ... }: {
