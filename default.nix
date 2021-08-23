@@ -36,7 +36,7 @@ let
   webDir = "$src/bin/four.jsexe";
   webFiles = nixpkgs.lib.strings.concatStringsSep " "
     [ "index.html" "rts.js" "lib.js" "out.js" "runmain.js" ];
-  web = nixpkgs.runCommand "four-zip" {
+  web = nixpkgs.runCommand "four-web" {
     src = rawWeb;
   } ''
     mkdir -p $out
