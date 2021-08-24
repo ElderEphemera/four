@@ -1,8 +1,8 @@
 let
-  platform = import (builtins.fetchGit {
+  platform = import (builtins.fetchTarball {
     name = "reflex-platform";
-    url = "https://github.com/reflex-frp/reflex-platform";
-    ref = "5429278830e1555a577f2550e045ce7f7164aa65";
+    url = "https://github.com/reflex-frp/reflex-platform/archive/refs/tags/v0.7.1.0.tar.gz";
+    sha256 = "1k99nadp3m4xjzl52pm39ijkd6nw634dhy8m0rvn49cv20431gpi";
   }) { config.android_sdk.accept_license = true; };
   inherit (platform) nixpkgs;
 
